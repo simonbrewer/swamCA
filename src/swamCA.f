@@ -145,6 +145,57 @@
       dVmin = minval(dV0i, mask=dV0i.gt.0.0)
       dVtot = sum(dV0i)
 
+      ! Check for outflow
+      if (maxval(dV0i).gt.0.0) then
+        !write (*,*) dVmin,dVmax,dVtot,"DOSTUFF"
+
+        ! Weights (eqn. 6; NEED TO CHECK PRECISION ERROR HERE, wi > 1)
+        wi(:) = dV0i(:) / (dVtot + dVmin)
+        w0 = dVmin / (dVtot + dVmin)
+        maxid = maxloc(wi)
+
+        !write(*,*) "wi",w0,maxid,wi
+
+        ! Maximum permissable velocity (m/s eqn. 9)
+        d0 = wse(i,j) - dem(i,j) ! Water depth in central cell (m)
+        sd0g = sqrt(d0 * g) !
+        nd0g = (1/mannn) * d0**(2./3.) * sqrt(dl0i(maxid(1)) / cellx)
+        vmax = min(sd0g, nd0g)
+
+        !write(*,*) "d0",d0,sd0g,nd0g,vmax
+
+        ! Maximum volume to neighbor w/ highest weight (m3, eqn. 10)
+        im = vmax * d0 * dt * cellem
+
+        !write(*,*) "im",im
+
+        ! Total volume to leave cell (m3, eqn. 11)
+        itotdt = min( d0*cella,
+     >              im/maxval(wi),
+     >              dVmin + otot(i,j) )
+
+        !write(*,*) "d0*cella",d0*cella
+        !write(*,*) "im/maxwi",im/maxval(wi)
+        !write(*,*) "dvmin+otot",dVmin+otot(j,k)
+        !write(*,*) i,j,"itotdt",itotdt
+        ! Copy outflow value to otot (could really just store this as
+        ! otot)
+
+        otot(i,j) = itotdt
+
+        ! Calculate flow into all neighboring cells (eqn. 12)
+        do 41 k=1,8
+        fluxes(i,j,k) = itotdt * wi(k)
+        itot((i+offx(k)),(j+offy(k))) = itot((i+offx(k)),(j+offy(k))) +
+     >    itotdt * wi(k)
+41      continue
+        ! Add "inflow" for volume that is retained in center cell
+        itot(i,j) = itot(i,j) + w0 * itotdt
+
+
+      endif ! Check for positive outflow volume
+
+
       endif ! Standing water check
 
       endif ! Barrier cell check

@@ -67,8 +67,9 @@ itot = as.matrix(itot.r)
 otot = as.matrix(otot.r)
 wse = as.matrix(wse.r)
 
-swamCA_1t(gridx, gridy, dem,
-          ppt, evap, runoff, baseflow,
-          wse, otot, itot, delt, nullval=-1e6,
-          mannN=0.05, cellem=50,
-          tolwd=0.0001, tolslope=0.001)
+sim.out = swamCA_1t(gridx, gridy, dem,
+                    ppt, evap, runoff, baseflow,
+                    wse, otot, itot, delt, nullval=-1e6,
+                    mannN=0.05, cellem=50,
+                    tolwd=0.0001, tolslope=0.001)
+
