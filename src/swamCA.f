@@ -55,7 +55,8 @@
      >                 fluxes, dt, nullcell, mannn,
      >                 cellx, cellem, cella)
 
-      ! call update_depth( m, n, ppt, wse, itot, otot, dt, cella )
+      call update_depth( m, n, ppt, evap, runoff, baseflow,
+     >                   wse, itot, otot, dt, cella )
 
       end
 
@@ -187,7 +188,7 @@
         do 41 k=1,8
         fluxes(i,j,k) = itotdt * wi(k)
         itot((i+offx(k)),(j+offy(k))) = itot((i+offx(k)),(j+offy(k))) +
-     >    itotdt * wi(k)
+     >                                  itotdt * wi(k)
 41      continue
         ! Add "inflow" for volume that is retained in center cell
         itot(i,j) = itot(i,j) + w0 * itotdt
@@ -205,4 +206,42 @@
 
       end
 
+      !-------------------------------------------------------------------------
+      ! Subroutine to update water levels
+      ! This is equation 13 from Guidolin et al
+      subroutine update_depth( m, n, ppt, evap, runoff, baseflow,
+     >                         wse, itot, otot, dt, cella )
+
+      !-------------------------------------------------------------------------
+      ! Input variables
+      integer m,n ! Grid sizes
+      double precision ppt( m, n ) ! PPT grid values (mm)
+      double precision evap( m, n ) ! PPT grid values (mm)
+      double precision runoff( m, n ) ! PPT grid values (mm)
+      double precision baseflow( m, n ) ! PPT grid values (mm)
+      double precision itot( m, n ) ! Cuml. inflow into each cell (m3)
+      double precision otot( m, n ) ! Total outflow from each cell (m3)
+      double precision dt ! Current time step (s)
+      double precision cella ! Cell area (HC)
+
+      ! Output variables
+      double precision wse( m, n ) ! PPT grid values (mm)
+
+      ! Internal variables
+      integer i,j
+
+      do 10 i=2,(m-1)
+
+      do 20 j=2,(n-1)
+      wse(i,j) = wse(i,j) +
+     >           itot(i,j) / cella +
+     >           (( ppt(i,j) * 1e-3 ) / ( 60 * 60 )) * dt -
+     >           otot(i,j) / cella
+
+20    continue
+10    continue
+
+      end
+
+      
 
