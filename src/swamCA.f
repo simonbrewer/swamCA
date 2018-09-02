@@ -122,19 +122,23 @@
       !do 20 j=2,(n-1)
       do 20 j=1,n
 
-      if (mask(i,j).ne.0) then ! Check for barrier cells
+      if (mask(i,j).eq.0) then ! Check for barrier cells
               ! write(*,*) i,j,dem(i,j),ppt(i,j),itot(i,j),wse(i,j)
       if (wse(i,j).gt.dem(i,j)) then ! Check for standing water in cell
       ! Get neighbors
       do 30 k=1,8
       ! Estimate difference in level
-      dl0i(k) = ( wse(i,j) + tau ) - wse((i+offx(k)),(j+offy(k)))
-      !write(*,*) 1,k,dl0i(k)
+      if (mask((i+offx(k)),(j+offy(k))).eq.0) then
+        dl0i(k) = ( wse(i,j) + tau ) - wse((i+offx(k)),(j+offy(k)))
+        !write(*,*) 1,k,dl0i(k)
 
-      ! Set negative level differences to 0
-      !dl0i(k) = dmax1( myz, dl0i1(k) )
-      if (dl0i(k).le.0.0) then
-        dl0i(k)=0.0
+        ! Set negative level differences to 0
+        !dl0i(k) = dmax1( myz, dl0i1(k) )
+        if (dl0i(k).le.0.0) then
+          dl0i(k)=0.0
+        endif
+      else
+        dl0i(k) = 0.0
       endif
       !write(*,*) 2,k,dl0i(k)
       dV0i(k) = max( 0.0, dl0i(k)) * cella ! Equation 2
@@ -149,7 +153,8 @@
 
       ! Check for outflow
       if (maxval(dV0i).gt.0.0) then
-        !write (*,*) dVmin,dVmax,dVtot,"DOSTUFF"
+        !write (*,*) i,j,"DOSTUFF"
+        !write (*,*) dVmin,dVmax,dVtot
 
         ! Weights (eqn. 6; NEED TO CHECK PRECISION ERROR HERE, wi > 1)
         wi(:) = dV0i(:) / (dVtot + dVmin)

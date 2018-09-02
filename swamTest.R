@@ -70,7 +70,7 @@ runoff = as.matrix(runoff.r)
 baseflow = as.matrix(baseflow.r)
 itot = as.matrix(itot.r)
 otot = as.matrix(otot.r)
-wse = as.matrix(wse.r)
+wse = as.matrix(dem.r)
 
 sim.out = swamCA_1t(gridx, gridy, dem, mask,
                     ppt, evap, runoff, baseflow,

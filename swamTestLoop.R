@@ -70,7 +70,7 @@ itot = as.matrix(itot.r)
 otot = as.matrix(otot.r)
 wse = as.matrix(dem.r)
 
-for (i in 1:2) {
+for (i in 1:10) {
   print(i)
   sim.out = swamCA_1t(gridx, gridy, dem, mask,
                       ppt, evap, runoff, baseflow,
