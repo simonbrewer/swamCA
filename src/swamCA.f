@@ -17,22 +17,21 @@
 ! updates time and linear reservoir code
 !-------------------------------------------------------------------------------
 
-      subroutine swamca_1t( m, n, dem,  
+      subroutine swamca_1t( m, n, dem, mask, 
      >                      ppt, evap, runoff, baseflow,
-     >                      wse, otot, itot, dt, nullcell, 
+     >                      wse, otot, itot, dt,
      >                      mannn, cellx, cellem, cella,
      >                      tolwd, tolslope)
       !-------------------------------------------------------------------------
       ! Input variables
       integer m,n ! Grid sizes
       double precision dem( m, n ) ! Elevation values (m)
-      double precision basin( m, n ) ! Elevation values (m)
-      double precision ppt( m, n ) ! PPT grid values (mm)
-      double precision evap( m, n ) ! PPT grid values (mm)
-      double precision runoff( m, n ) ! PPT grid values (mm)
-      double precision baseflow( m, n ) ! PPT grid values (mm)
+      integer mask( m, n ) ! Binary mask (0/1)
+      double precision ppt( m, n ) ! PPT grid values (mm/d)
+      double precision evap( m, n ) ! Evap grid values (mm/d)
+      double precision runoff( m, n ) ! Runoff grid values (mm/d)
+      double precision baseflow( m, n ) ! Baseflow grid values (mm/d)
       double precision dt ! Current time step (s)
-      double precision nullcell ! Value used to indicate null/border cells
       double precision mannn ! Manning's roughness coefficient
       double precision cellx ! Distance between cell centers (HC)
       double precision cellem ! Cell edge length (HC)
@@ -51,8 +50,8 @@
       !-------------------------------------------------------------------------
       ! Main loop through grid cells
 
-      call calc_flows( m, n, dem, wse, otot, itot,
-     >                 fluxes, dt, nullcell, mannn,
+      call calc_flows( m, n, dem, mask, wse, otot, itot,
+     >                 fluxes, dt, mannn,
      >                 cellx, cellem, cella)
 
       call update_depth( m, n, ppt, evap, runoff, baseflow,
@@ -62,16 +61,16 @@
 
       !-------------------------------------------------------------------------
       ! Subroutine to calculate flows between all cells
-      subroutine calc_flows( m, n, dem, wse, otot, itot,
-     >                       fluxes, dt, nullcell, mannn,
+      subroutine calc_flows( m, n, dem, mask, wse, otot, itot,
+     >                       fluxes, dt, mannn,
      >                       cellx, cellem, cella)
 
       !-------------------------------------------------------------------------
       ! Input variables
       integer m,n ! Grid sizes
       double precision dem( m, n ) ! Elevation values (m)
+      integer mask( m, n ) ! Binary mask (0/1)
       double precision dt ! Current time step (s)
-      double precision nullcell ! Value used to indicate null/border cells
       double precision mannn ! Manning's roughness coefficient
       double precision cellx ! Distance between cell centers (HC)
       double precision cellem ! Cell edge length (HC)
@@ -117,11 +116,13 @@
       ! Reset all outflows to zero
       otot(:,:) = 0
 
-      do 10 i=2,(m-1)
+      !do 10 i=2,(m-1)
+      do 10 i=1,m
 
-      do 20 j=2,(n-1)
+      !do 20 j=2,(n-1)
+      do 20 j=1,n
 
-      if (dem(i,j).ne.nullcell) then ! Check for barrier cells
+      if (mask(i,j).ne.0) then ! Check for barrier cells
               ! write(*,*) i,j,dem(i,j),ppt(i,j),itot(i,j),wse(i,j)
       if (wse(i,j).gt.dem(i,j)) then ! Check for standing water in cell
       ! Get neighbors
