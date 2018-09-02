@@ -5,6 +5,9 @@
 ## for rapid flood analysis Env. Mod. Soft., 84, 378-394
 ##
 ###############################################################################
+###############################################################################
+## Test with hydroshed parameters
+###############################################################################
 
 ###############################################################################
 ## Libraries
@@ -35,17 +38,29 @@ swamCA_1t <- function(gridx, gridy, dem, mask,
   
 }
 
+binOutlet <- function (x) {
+  outlet = FALSE
+  if (max(x) == 1e6) { ## Are we next to an edge?
+    if (x[5] != 1e6) { ## Is the cell an edge cell?
+      if (which.min(x) == 5) {
+        outlet = TRUE
+      }
+    } 
+  } 
+}
+
 ## Files
 dem.r = raster("dem1.nc")
 dem.r = extend(dem.r, c(1,1), value = 1e6)
 mask.r = dem.r == 1e6
 gridx = dim(dem.r)[1]
 gridy = dim(dem.r)[2]
-delt = 60
+delt = 60*60 ## Daily integration
+cellem = 1000 ## Approximately 1000m cell centers
 
 ###############################################################################
-## Make up precip grid (mm/hr)
-pptconst = 20
+## Make up precip grid (mm/day)
+pptconst = 20/30
 # ppt.r = setValues(dem.r, 0)
 # ppt.r[1,1] <- pptconst
 ppt.r = setValues(dem.r, pptconst)
@@ -70,12 +85,16 @@ itot = as.matrix(itot.r)
 otot = as.matrix(otot.r)
 wse = as.matrix(dem.r)
 
-for (i in 1:100) {
+###############################################################################
+## Find outlet
+outlet.r = focal(dem.r, w=matrix(1,3,3), binOutlet, pad=TRUE, padValue=1e6)
+
+for (i in 1:240) {
   print(i)
   sim.out = swamCA_1t(gridx, gridy, dem, mask,
                       ppt, evap, runoff, baseflow,
                       wse, otot, itot, delt,
-                      mannN=0.05, cellem=50,
+                      mannN=0.05, cellem=cellem,
                       tolwd=0.0001, tolslope=0.001)
   wse = sim.out$wse
   print(sum(sim.out$wse-sim.out$dem))
