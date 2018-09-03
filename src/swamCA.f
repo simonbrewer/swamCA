@@ -241,7 +241,7 @@
       do 20 j=2,(n-1)
       wse(i,j) = wse(i,j) +
      >           itot(i,j) / cella +
-     >           (( ppt(i,j) * 1e-3 ) / ( 60 * 60 )) * dt -
+     >           (( ppt(i,j) * 1e-3 ) / ( 60 * 60 *24 )) * dt -
      >           otot(i,j) / cella
 
 20    continue

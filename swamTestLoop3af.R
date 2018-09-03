@@ -50,17 +50,17 @@ binOutlet <- function (x) {
 }
 
 ## Files
-dem.r = raster("dem1.nc")
+dem.r = raster("~/Dropbox/Data/hydrology/basins/hydrosheds/lakedem/af30c.nc")
 dem.r = extend(dem.r, c(1,1), value = 1e6)
 mask.r = dem.r == 1e6
 gridx = dim(dem.r)[1]
 gridy = dim(dem.r)[2]
-delt = 60*60 ## Daily integration
+delt = 60*60*24 ## Daily integration
 cellem = 1000 ## Approximately 1000m cell centers
 
 ###############################################################################
 ## Make up precip grid (mm/day)
-pptconst = 20/30/24
+pptconst = 20
 # ppt.r = setValues(dem.r, 0)
 # ppt.r[1,1] <- pptconst
 ppt.r = setValues(dem.r, pptconst)
@@ -99,7 +99,8 @@ for (i in 1:240) {
   wse = sim.out$wse
   print(sum(sim.out$wse-sim.out$dem))
   ## Convert wse to raster for plotting
-  wse.r = setValues(dem.r, matrix(sim.out$wse - sim.out$dem, nrow=22, ncol=32))
+  wse.r = setValues(dem.r, matrix(sim.out$wse - sim.out$dem, 
+                                  nrow=dim(dem.r)[1], ncol=dim(dem.r)[2]))
   plot(wse.r)
   
 }
