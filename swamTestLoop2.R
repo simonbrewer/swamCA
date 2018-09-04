@@ -15,7 +15,7 @@ library(raster)
 source("helpers.R")
 
 ## Files
-dem.r = raster("dem1.nc")
+dem.r = raster("./Data/dem2.nc")
 dem.r = extend(dem.r, c(1,1), value = 1e6)
 mask.r = dem.r == 1e6
 gridx = dim(dem.r)[1]

@@ -16,7 +16,7 @@ library(raster)
 source("helpers.R")
 
 ## Files
-dem.r = raster("~/Dropbox/Data/hydrology/basins/hydrosheds/lakedem/af30c.nc")
+dem.r = raster("./Data/af30c.nc")
 ## Calculate slope (prior to buffer)
 dem.r = extend(dem.r, c(1,1), value = 1e6)
 mask.r = dem.r == 1e6
@@ -62,7 +62,7 @@ itot = as.matrix(itot.r)
 otot = as.matrix(otot.r)
 wse = as.matrix(dem.r)
 ###############################################################################
-stop()
+
 for (i in 1:240) {
   print(i)
   sim.out = swamCA_1t(gridx, gridy, dem, mask, cella, 
@@ -79,5 +79,5 @@ for (i in 1:240) {
   
 }
 
-bclake = readOGR("929m lake level.kml")
+bclake = readOGR("./Data/929m lake level.kml")
 plot(bclake, add=TRUE)
