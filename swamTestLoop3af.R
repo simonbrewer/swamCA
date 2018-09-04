@@ -11,10 +11,11 @@
 
 ###############################################################################
 ## Libraries
+library(rgdal)
 library(raster)
 dyn.load("./src/swamCA.so")
 
-swamCA_1t <- function(gridx, gridy, dem, mask,
+swamCA_1t <- function(gridx, gridy, dem, mask, cella,
                       ppt, evap, runoff, baseflow,
                       wse, otot, itot, delt,  
                       mannN=0.05, cellem=50, 
@@ -24,6 +25,7 @@ swamCA_1t <- function(gridx, gridy, dem, mask,
                    m = as.integer(gridx), n = as.integer(gridy),
                    dem = as.double(dem), 
                    mask = as.integer(mask), 
+                   cella = as.double(cella), 
                    ppt = as.double(ppt),
                    evap = as.double(evap),
                    runoff = as.double(runoff),
@@ -32,7 +34,7 @@ swamCA_1t <- function(gridx, gridy, dem, mask,
                    otot = as.double(dem), itot = as.double(dem),
                    dt = as.double(delt), 
                    mannn = as.double(mannN), cellx = as.double(cellem),
-                   cellem = as.double(cellem), cella = as.double(cellem*cellem),
+                   cellem = as.double(cellem), 
                    tolwd = as.double(tolwd), tolslope = as.double(tolslope))
   return(simcf)
   
@@ -55,7 +57,7 @@ dem.r = extend(dem.r, c(1,1), value = 1e6)
 mask.r = dem.r == 1e6
 gridx = dim(dem.r)[1]
 gridy = dim(dem.r)[2]
-delt = 60*60*24 ## Daily integration
+delt = 60*60 ## Daily integration
 cellem = 1000 ## Approximately 1000m cell centers
 
 ###############################################################################
@@ -74,8 +76,13 @@ itot.r = setValues(dem.r, 0)
 otot.r = setValues(dem.r, 0)
 
 ###############################################################################
+## Grid to record total inflow and outflow from each timestep
+area.r = area(dem.r)
+
+###############################################################################
 ## Convert to matrices
 dem = as.matrix(dem.r)
+cella = as.matrix(area.r)
 mask = as.matrix(mask.r)
 ppt = as.matrix(ppt.r)
 evap = as.matrix(evap.r)
@@ -91,7 +98,7 @@ outlet.r = focal(dem.r, w=matrix(1,3,3), binOutlet, pad=TRUE, padValue=1e6)
 
 for (i in 1:240) {
   print(i)
-  sim.out = swamCA_1t(gridx, gridy, dem, mask,
+  sim.out = swamCA_1t(gridx, gridy, dem, mask, cella, 
                       ppt, evap, runoff, baseflow,
                       wse, otot, itot, delt,
                       mannN=0.05, cellem=cellem,
@@ -105,3 +112,5 @@ for (i in 1:240) {
   
 }
 
+bclake = readOGR("929m lake level.kml")
+plot(bclake, add=TRUE)

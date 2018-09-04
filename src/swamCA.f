@@ -17,16 +17,17 @@
 ! updates time and linear reservoir code
 !-------------------------------------------------------------------------------
 
-      subroutine swamca_1t( m, n, dem, mask, 
+      subroutine swamca_1t( m, n, dem, mask, cella,
      >                      ppt, evap, runoff, baseflow,
      >                      wse, otot, itot, dt,
-     >                      mannn, cellx, cellem, cella,
+     >                      mannn, cellx, cellem,
      >                      tolwd, tolslope)
       !-------------------------------------------------------------------------
       ! Input variables
       integer m,n ! Grid sizes
       double precision dem( m, n ) ! Elevation values (m)
       integer mask( m, n ) ! Binary mask (0/1)
+      double precision cella( m, n ) ! Cell area (m2)
       double precision ppt( m, n ) ! PPT grid values (mm/d)
       double precision evap( m, n ) ! Evap grid values (mm/d)
       double precision runoff( m, n ) ! Runoff grid values (mm/d)
@@ -35,7 +36,7 @@
       double precision mannn ! Manning's roughness coefficient
       double precision cellx ! Distance between cell centers (HC)
       double precision cellem ! Cell edge length (HC)
-      double precision cella ! Cell area (HC)
+      ! double precision cella ! Cell area (HC)
       double precision tolwd ! Minimum water depth for flow to occur
       double precision tolslope ! Minimum slope for flow to occur
 
@@ -50,9 +51,10 @@
       !-------------------------------------------------------------------------
       ! Main loop through grid cells
 
-      call calc_flows( m, n, dem, mask, wse, otot, itot,
+      call calc_flows( m, n, dem, mask, cella, 
+     >                 wse, otot, itot,
      >                 fluxes, dt, mannn,
-     >                 cellx, cellem, cella)
+     >                 cellx, cellem)
 
       call update_depth( m, n, ppt, evap, runoff, baseflow,
      >                   wse, itot, otot, dt, cella )
@@ -61,20 +63,22 @@
 
       !-------------------------------------------------------------------------
       ! Subroutine to calculate flows between all cells
-      subroutine calc_flows( m, n, dem, mask, wse, otot, itot,
+      subroutine calc_flows( m, n, dem, mask, cella, 
+     >                       wse, otot, itot,
      >                       fluxes, dt, mannn,
-     >                       cellx, cellem, cella)
+     >                       cellx, cellem)
 
       !-------------------------------------------------------------------------
       ! Input variables
       integer m,n ! Grid sizes
       double precision dem( m, n ) ! Elevation values (m)
       integer mask( m, n ) ! Binary mask (0/1)
+      double precision cella( m, n ) ! Cell area (m2)
       double precision dt ! Current time step (s)
       double precision mannn ! Manning's roughness coefficient
       double precision cellx ! Distance between cell centers (HC)
       double precision cellem ! Cell edge length (HC)
-      double precision cella ! Cell area (HC)
+      ! double precision cella ! Cell area (HC)
 
       ! Output variables
       double precision wse( m, n ) ! PPT grid values (mm)
@@ -141,7 +145,7 @@
         dl0i(k) = 0.0
       endif
       !write(*,*) 2,k,dl0i(k)
-      dV0i(k) = max( 0.0, dl0i(k)) * cella ! Equation 2
+      dV0i(k) = max( 0.0, dl0i(k)) * cella(i,j) ! Equation 2
       !write(*,*) 3,k,dl0i(k),dV0i(k)
 
 30    continue
@@ -177,7 +181,7 @@
         !write(*,*) "im",im
 
         ! Total volume to leave cell (m3, eqn. 11)
-        itotdt = min( d0*cella,
+        itotdt = min( d0*cella(i,j),
      >              im/maxval(wi),
      >              dVmin + otot(i,j) )
 
@@ -228,7 +232,7 @@
       double precision itot( m, n ) ! Cuml. inflow into each cell (m3)
       double precision otot( m, n ) ! Total outflow from each cell (m3)
       double precision dt ! Current time step (s)
-      double precision cella ! Cell area (HC)
+      double precision cella( m, n ) ! Cell area (m2)
 
       ! Output variables
       double precision wse( m, n ) ! PPT grid values (mm)
@@ -240,9 +244,9 @@
 
       do 20 j=2,(n-1)
       wse(i,j) = wse(i,j) +
-     >           itot(i,j) / cella +
+     >           itot(i,j) / cella(i,j) +
      >           (( ppt(i,j) * 1e-3 ) / ( 60 * 60 *24 )) * dt -
-     >           otot(i,j) / cella
+     >           otot(i,j) / cella(i,j)
 
 20    continue
 10    continue
