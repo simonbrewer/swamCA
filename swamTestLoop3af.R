@@ -13,46 +13,11 @@
 ## Libraries
 library(rgdal)
 library(raster)
-dyn.load("./src/swamCA.so")
-
-swamCA_1t <- function(gridx, gridy, dem, mask, cella,
-                      ppt, evap, runoff, baseflow,
-                      wse, otot, itot, delt,  
-                      mannN=0.05, cellem=50, 
-                      tolwd=0.0001, tolslope=0.001) {
-  
-  simcf = .Fortran("swamca_1t",
-                   m = as.integer(gridx), n = as.integer(gridy),
-                   dem = as.double(dem), 
-                   mask = as.integer(mask), 
-                   cella = as.double(cella), 
-                   ppt = as.double(ppt),
-                   evap = as.double(evap),
-                   runoff = as.double(runoff),
-                   baseflow = as.double(baseflow),
-                   wse = as.double(wse),
-                   otot = as.double(dem), itot = as.double(dem),
-                   dt = as.double(delt), 
-                   mannn = as.double(mannN), cellx = as.double(cellem),
-                   cellem = as.double(cellem), 
-                   tolwd = as.double(tolwd), tolslope = as.double(tolslope))
-  return(simcf)
-  
-}
-
-binOutlet <- function (x) {
-  outlet = FALSE
-  if (max(x) == 1e6) { ## Are we next to an edge?
-    if (x[5] != 1e6) { ## Is the cell an edge cell?
-      if (which.min(x) == 5) {
-        outlet = TRUE
-      }
-    } 
-  } 
-}
+source("helpers.R")
 
 ## Files
 dem.r = raster("~/Dropbox/Data/hydrology/basins/hydrosheds/lakedem/af30c.nc")
+## Calculate slope (prior to buffer)
 dem.r = extend(dem.r, c(1,1), value = 1e6)
 mask.r = dem.r == 1e6
 gridx = dim(dem.r)[1]
@@ -76,8 +41,13 @@ itot.r = setValues(dem.r, 0)
 otot.r = setValues(dem.r, 0)
 
 ###############################################################################
-## Grid to record total inflow and outflow from each timestep
+## Estimate cell areas
 area.r = area(dem.r)
+## Calculate slope
+slope.r = terrain(dem.r, "slope", unit="degrees")
+## Find outlet
+outlet.r = focal(dem.r, w=matrix(1,3,3), binOutlet, pad=TRUE, padValue=1e6)
+###############################################################################
 
 ###############################################################################
 ## Convert to matrices
@@ -91,11 +61,8 @@ baseflow = as.matrix(baseflow.r)
 itot = as.matrix(itot.r)
 otot = as.matrix(otot.r)
 wse = as.matrix(dem.r)
-
 ###############################################################################
-## Find outlet
-outlet.r = focal(dem.r, w=matrix(1,3,3), binOutlet, pad=TRUE, padValue=1e6)
-
+stop()
 for (i in 1:240) {
   print(i)
   sim.out = swamCA_1t(gridx, gridy, dem, mask, cella, 
