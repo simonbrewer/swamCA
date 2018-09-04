@@ -27,6 +27,9 @@ swamCA_1t <- function(gridx, gridy, dem, mask, cella,
   
 }
 
+###############################################################################
+## Function to find outlet cells
+## Defined as cells next to the border mask, with no lower elevation neighbors
 binOutlet <- function (x) {
   outlet = FALSE
   if (max(x) == 1e6) { ## Are we next to an edge?
@@ -38,3 +41,52 @@ binOutlet <- function (x) {
   } 
 }
 
+###############################################################################
+## Function to convert radians to degrees
+rad2deg <- function(x) {
+  x*180/pi
+}
+
+###############################################################################
+## Function to convert radians to degrees
+deg2rad <- function(x) {
+  x/180*pi
+}
+
+###############################################################################
+## Function to calculate great circle distances
+gcDist <- function(lon1, lat1, lon2, lat2, r=6378) {
+  ## Degree conversion
+  lon1 <- lon1 * pi/180
+  lon2 <- lon2 * pi/180
+  lat1 <- lat1 * pi/180
+  lat2 <- lat2 * pi/180
+  ## Central angle
+  ca <- acos((sin(lat1)*sin(lat2)) + 
+               (cos(lat1)*cos(lat2) * cos(abs(lon1-lon2))))
+  d <- r * ca
+  return(d)
+}
+
+###############################################################################
+## Function to lower border next to outlets
+modBorder <- function(outlet, dem, mask) {
+  oID <- Which(outlet==1, cells=TRUE)
+  if (length(oID) > 0) {
+    for (i in 1:length(oID)) {
+      cen.crds = xyFromCell(mask, x[i])
+      ngb.rc = adjacent(mask, x[i], directions = 8)
+      ngb.crds = xyFromCell(mask, ngb.rc[,2])
+      ngb.vals = extract(mask, ngb.rc[,2])
+      ngb.crds <- ngb.crds[which(ngb.vals==1),]
+      ngb.rc <- ngb.rc[which(ngb.vals==1),]
+      ngb.dist = distCosine(cen.crds, ngb.crds)
+      
+      bID <- which.min(ngb.dist)
+      dem[ngb.rc[bID,2]] <- dem[ngb.rc[bID,2]]*-1
+      
+    }
+    
+  }
+  return(dem)
+}
