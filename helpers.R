@@ -2,7 +2,7 @@
 ## Helper functions
 dyn.load("./src/swamCA.so")
 
-swamCA_1t <- function(gridx, gridy, dem, mask, cella,
+swamCA_1t <- function(gridx, gridy, dem, mask, cella, outlet,
                       ppt, evap, runoff, baseflow,
                       wse, otot, itot, delt,  
                       mannN=0.05, cellem=50, 
@@ -13,6 +13,7 @@ swamCA_1t <- function(gridx, gridy, dem, mask, cella,
                    dem = as.double(dem), 
                    mask = as.integer(mask), 
                    cella = as.double(cella), 
+                   outlet = as.integer(outlet), 
                    ppt = as.double(ppt),
                    evap = as.double(evap),
                    runoff = as.double(runoff),

@@ -13,6 +13,7 @@
 ## Libraries
 library(rgdal)
 library(raster)
+library(RColorBrewer)
 source("helpers.R")
 
 ## Files
@@ -24,6 +25,9 @@ gridx = dim(dem.r)[1]
 gridy = dim(dem.r)[2]
 delt = 60*60 ## Daily integration
 cellem = 1000 ## Approximately 1000m cell centers
+
+###############################################################################
+cols <- colorRampPalette(brewer.pal(9,"Blues"))(100)
 
 ###############################################################################
 ## Make up precip grid (mm/day)
@@ -57,6 +61,7 @@ dem.r <- mb$dem
 dem = as.matrix(dem.r)
 cella = as.matrix(area.r)
 mask = as.matrix(mask.r)
+outlet = as.matrix(outlet.r)
 ppt = as.matrix(ppt.r)
 evap = as.matrix(evap.r)
 runoff = as.matrix(runoff.r)
@@ -65,10 +70,11 @@ itot = as.matrix(itot.r)
 otot = as.matrix(otot.r)
 wse = as.matrix(dem.r)
 ###############################################################################
-
-for (i in 1:240) {
-  print(i)
-  sim.out = swamCA_1t(gridx, gridy, dem, mask, cella, 
+maxwse = 0
+# for (i in 1:240) {
+while (maxwse < 10) {
+    print(i)
+  sim.out = swamCA_1t(gridx, gridy, dem, mask, cella, outlet,
                       ppt, evap, runoff, baseflow,
                       wse, otot, itot, delt,
                       mannN=0.05, cellem=cellem,
@@ -78,9 +84,27 @@ for (i in 1:240) {
   ## Convert wse to raster for plotting
   wse.r = setValues(dem.r, matrix(sim.out$wse - sim.out$dem, 
                                   nrow=dim(dem.r)[1], ncol=dim(dem.r)[2]))
-  plot(wse.r)
+  plot(wse.r, col=cols)
+  
+  maxwse = cellStats(wse.r, max)
   
 }
 
 bclake = readOGR("./Data/929m lake level.kml")
 plot(bclake, add=TRUE)
+
+plot(log10(wse.r), col=cols)
+plot(outlet.r)
+
+## Test plot
+pdf("test10m.pdf")
+par(mfrow=c(1,2))
+plot(wse.r, col=cols, main="Water Surface Elev. (m)")
+plot(bclake, add=TRUE)
+plot(log10(wse.r), col=cols, main="log10 Water Surface Elev. (m)")
+plot(bclake, add=TRUE)
+dev.off()
+# dem2.r <- dem.r
+# dem2.r[Which(dem.r==1e6), ] <- NA
+# dem2.r[Which(dem.r==-1e6), ] <- NA
+# plot3D(dem2.r, drape=NULL, zfac=2, col=cols)

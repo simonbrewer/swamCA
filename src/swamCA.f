@@ -17,7 +17,7 @@
 ! updates time and linear reservoir code
 !-------------------------------------------------------------------------------
 
-      subroutine swamca_1t( m, n, dem, mask, cella,
+      subroutine swamca_1t( m, n, dem, mask, cella, outlet,
      >                      ppt, evap, runoff, baseflow,
      >                      wse, otot, itot, dt,
      >                      mannn, cellx, cellem,
@@ -28,6 +28,7 @@
       double precision dem( m, n ) ! Elevation values (m)
       integer mask( m, n ) ! Binary mask (0/1)
       double precision cella( m, n ) ! Cell area (m2)
+      integer outlet( m, n ) ! Outlet mask (0/1)
       double precision ppt( m, n ) ! PPT grid values (mm/d)
       double precision evap( m, n ) ! Evap grid values (mm/d)
       double precision runoff( m, n ) ! Runoff grid values (mm/d)
