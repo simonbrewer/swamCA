@@ -84,9 +84,10 @@ modBorder <- function(outlet, dem, mask) {
       
       bID <- which.min(ngb.dist)
       dem[ngb.rc[bID,2]] <- dem[ngb.rc[bID,2]]*-1
+      mask[ngb.rc[bID,2]] <- mask[ngb.rc[bID,2]]*-1
       
     }
     
   }
-  return(dem)
+  return(list(dem=dem,mask=mask))
 }

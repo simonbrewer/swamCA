@@ -132,7 +132,8 @@
       ! Get neighbors
       do 30 k=1,8
       ! Estimate difference in level
-      if (mask((i+offx(k)),(j+offy(k))).eq.0) then
+      !if (mask((i+offx(k)),(j+offy(k))).eq.0) then
+      if (dem((i+offx(k)),(j+offy(k))).le.1e6) then
         dl0i(k) = ( wse(i,j) + tau ) - wse((i+offx(k)),(j+offy(k)))
         !write(*,*) 1,k,dl0i(k)
 
@@ -182,8 +183,8 @@
 
         ! Total volume to leave cell (m3, eqn. 11)
         itotdt = min( d0*cella(i,j),
-     >              im/maxval(wi),
-     >              dVmin + otot(i,j) )
+     >                im/maxval(wi),
+     >                dVmin + otot(i,j) )
 
         !write(*,*) "d0*cella",d0*cella
         !write(*,*) "im/maxwi",im/maxval(wi)

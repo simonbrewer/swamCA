@@ -20,7 +20,9 @@ area.r = area(dem.r)
 slope.r = terrain(dem.r, "slope", unit="degrees")
 ## Find outlet
 outlet.r = focal(dem.r, w=matrix(1,3,3), binOutlet, pad=TRUE, padValue=1e6)
-dem2.r <- modBorder(outlet.r, dem.r, mask.r)
+mb <- modBorder(outlet.r, dem.r, mask.r)
+dem2.r <- mb$dem
+mask2.r <- mb$mask
 ###############################################################################
 
 ###############################################################################
